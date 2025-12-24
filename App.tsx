@@ -20,45 +20,53 @@ const App: React.FC = () => {
   const [aiReport, setAiReport] = useState<any>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
+  // Initialize data safely
   useEffect(() => {
-    const saved = localStorage.getItem('outlet_pipeline_data');
-    if (saved) {
-      setOutlets(JSON.parse(saved));
-    } else {
-      const initial: Outlet[] = [
-        {
-          id: '1',
-          name: 'Urban Bites - Downtown',
-          description: 'Premium cloud kitchen specializing in fusion street food.',
-          note: 'Requires high-capacity gas lines.',
-          currentStage: Stage.ONBOARDING_REQUEST,
-          createdAt: Date.now() - 86400000 * 2,
-          lastMovedAt: Date.now() - 86400000 * 2,
-          priority: 'high',
-          history: [{ stage: Stage.ONBOARDING_REQUEST, timestamp: Date.now() - 86400000 * 2 }]
-        },
-        {
-          id: '2',
-          name: 'Green Leaf Salads',
-          description: 'Health-conscious salad bar with focus on organic produce.',
-          note: 'Menu approval pending chef review of vegan options.',
-          currentStage: Stage.CHEF_APPROVAL,
-          createdAt: Date.now() - 86400000 * 5,
-          lastMovedAt: Date.now() - 86400000,
-          priority: 'medium',
-          history: [
-            { stage: Stage.ONBOARDING_REQUEST, timestamp: Date.now() - 86400000 * 5 },
-            { stage: Stage.OVERLAP_CHECK, timestamp: Date.now() - 86400000 * 3 },
-            { stage: Stage.CHEF_APPROVAL, timestamp: Date.now() - 86400000 }
-          ]
-        }
-      ];
-      setOutlets(initial);
+    try {
+      const saved = localStorage.getItem('outlet_pipeline_data');
+      if (saved) {
+        setOutlets(JSON.parse(saved));
+      } else {
+        const initial: Outlet[] = [
+          {
+            id: '1',
+            name: 'Urban Bites - Downtown',
+            description: 'Premium cloud kitchen specializing in fusion street food.',
+            note: 'Requires high-capacity gas lines.',
+            currentStage: Stage.ONBOARDING_REQUEST,
+            createdAt: Date.now() - 86400000 * 2,
+            lastMovedAt: Date.now() - 86400000 * 2,
+            priority: 'high',
+            history: [{ stage: Stage.ONBOARDING_REQUEST, timestamp: Date.now() - 86400000 * 2 }]
+          },
+          {
+            id: '2',
+            name: 'Green Leaf Salads',
+            description: 'Health-conscious salad bar with focus on organic produce.',
+            note: 'Menu approval pending chef review of vegan options.',
+            currentStage: Stage.CHEF_APPROVAL,
+            createdAt: Date.now() - 86400000 * 5,
+            lastMovedAt: Date.now() - 86400000,
+            priority: 'medium',
+            history: [
+              { stage: Stage.ONBOARDING_REQUEST, timestamp: Date.now() - 86400000 * 5 },
+              { stage: Stage.OVERLAP_CHECK, timestamp: Date.now() - 86400000 * 3 },
+              { stage: Stage.CHEF_APPROVAL, timestamp: Date.now() - 86400000 }
+            ]
+          }
+        ];
+        setOutlets(initial);
+      }
+    } catch (e) {
+      console.error("Failed to load data from localStorage", e);
     }
   }, []);
 
+  // Save data whenever it changes
   useEffect(() => {
-    localStorage.setItem('outlet_pipeline_data', JSON.stringify(outlets));
+    if (outlets.length > 0) {
+      localStorage.setItem('outlet_pipeline_data', JSON.stringify(outlets));
+    }
   }, [outlets]);
 
   const handleAddOutlet = (name: string, description: string, priority: 'low' | 'medium' | 'high', note: string) => {
@@ -136,7 +144,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col h-screen overflow-hidden">
-      {/* Responsive Header */}
       <header className="bg-white border-b border-slate-200 z-30 px-4 sm:px-6 py-3 sm:py-4 safe-top shadow-sm">
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -160,14 +167,6 @@ const App: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-full sm:rounded-2xl py-2.5 sm:py-3 pl-10 pr-10 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
             />
-            {searchTerm && (
-              <button 
-                onClick={() => setSearchTerm('')}
-                className="absolute inset-y-0 right-4 flex items-center text-slate-300 hover:text-slate-500"
-              >
-                <i className="fa-solid fa-circle-xmark"></i>
-              </button>
-            )}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -194,7 +193,6 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Optimized Main Pipeline Board */}
       <main className="flex-1 overflow-x-auto p-4 sm:p-6 md:p-8 pipeline-container">
         <div className="flex gap-4 sm:gap-6 min-w-max h-full pb-4">
           {STAGES.map((stage, index) => {
@@ -245,21 +243,19 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Footer Info (Hidden on very small screens to save space) */}
       <footer className="hidden sm:block bg-white border-t border-slate-200 px-6 py-2.5 safe-bottom">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between text-[9px] font-medium text-slate-400 uppercase tracking-widest">
           <div className="flex gap-4">
             <span>&copy; 2024 Outlet Ops</span>
-            <span className="text-indigo-400">PWA Ready v3.0</span>
+            <span className="text-indigo-400">Host Ready v3.1</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Live Sync Active</span>
+            <span>Platform Online</span>
           </div>
         </div>
       </footer>
 
-      {/* Modals remain same but handle responsiveness inside */}
       {isAddModalOpen && (
         <AddOutletModal 
           onClose={() => setIsAddModalOpen(false)} 
