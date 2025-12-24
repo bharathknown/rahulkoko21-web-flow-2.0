@@ -1,0 +1,144 @@
+
+import React, { useState } from 'react';
+import { Outlet, Stage } from '../types.ts';
+import { STAGE_ORDER } from '../constants.ts';
+
+interface OutletCardProps {
+  outlet: Outlet;
+  onMove: (id: string, direction: 'forward' | 'backward') => void;
+  onAnalyze: (outlet: Outlet) => void;
+  onDelete: (id: string) => void;
+  onShowHistory: (id: string) => void;
+  onUpdateNote: (id: string, note: string) => void;
+  onEdit: (outlet: Outlet) => void;
+}
+
+const OutletCard: React.FC<OutletCardProps> = ({ outlet, onMove, onAnalyze, onDelete, onShowHistory, onUpdateNote, onEdit }) => {
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [tempNote, setTempNote] = useState(outlet.note || '');
+
+  const stageIndex = STAGE_ORDER.indexOf(outlet.currentStage);
+  const canMoveBackward = stageIndex > 0;
+  const canMoveForward = stageIndex < STAGE_ORDER.length - 1;
+
+  const priorityColors = {
+    low: 'bg-gray-100 text-gray-600',
+    medium: 'bg-blue-100 text-blue-600',
+    high: 'bg-rose-100 text-rose-600',
+  };
+
+  const daysInStage = Math.floor((Date.now() - outlet.lastMovedAt) / (1000 * 60 * 60 * 24));
+
+  const handleSaveNote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdateNote(outlet.id, tempNote);
+    setIsEditingNote(false);
+  };
+
+  const handleCancelNote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTempNote(outlet.note || '');
+    setIsEditingNote(false);
+  };
+
+  return (
+    <div 
+      onClick={() => onEdit(outlet)}
+      className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all group overflow-hidden cursor-pointer hover:border-indigo-200"
+    >
+      <div className="flex justify-between items-start mb-2">
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${priorityColors[outlet.priority]}`}>
+          {outlet.priority}
+        </span>
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => { e.stopPropagation(); setIsEditingNote(!isEditingNote); }}
+            className={`text-slate-300 hover:text-amber-500 transition-colors ${isEditingNote ? 'text-amber-500' : ''}`}
+            title="Edit Notes"
+          >
+            <i className="fa-solid fa-note-sticky text-xs"></i>
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onShowHistory(outlet.id); }}
+            className="text-slate-300 hover:text-indigo-500 transition-colors"
+            title="View Journey History"
+          >
+            <i className="fa-solid fa-clock-rotate-left text-xs"></i>
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(outlet.id); }}
+            className="text-slate-300 hover:text-rose-500 transition-colors"
+            title="Delete Outlet"
+          >
+            <i className="fa-solid fa-trash-can text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <h4 className="font-semibold text-slate-800 text-sm mb-1 truncate" title={outlet.name}>
+        {outlet.name}
+      </h4>
+      <p className="text-slate-500 text-xs line-clamp-2 mb-3 leading-relaxed">
+        {outlet.description}
+      </p>
+
+      {isEditingNote ? (
+        <div className="mb-4 animate-in fade-in slide-in-from-top-1 duration-200">
+          <textarea
+            autoFocus
+            value={tempNote}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => setTempNote(e.target.value)}
+            className="w-full text-[11px] p-2 bg-amber-50 border border-amber-200 rounded-lg outline-none focus:ring-1 focus:ring-amber-300 resize-none"
+            placeholder="Add a note..."
+            rows={3}
+          />
+          <div className="flex justify-end gap-1 mt-1">
+            <button onClick={handleCancelNote} className="text-[9px] font-bold text-slate-400 hover:text-slate-600 px-2 py-1">Cancel</button>
+            <button onClick={handleSaveNote} className="text-[9px] font-bold bg-amber-500 text-white px-2 py-1 rounded shadow-sm hover:bg-amber-600">Save</button>
+          </div>
+        </div>
+      ) : outlet.note ? (
+        <div className="mb-4 p-2 bg-slate-50 rounded-lg border-l-2 border-slate-200">
+          <p className="text-[10px] text-slate-600 line-clamp-2 italic">
+            "{outlet.note}"
+          </p>
+        </div>
+      ) : null}
+
+      <div className="flex items-center text-[10px] text-slate-400 mb-4">
+        <i className="fa-regular fa-clock mr-1"></i>
+        {daysInStage === 0 ? 'Added today' : `${daysInStage}d in stage`}
+      </div>
+
+      <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-3">
+        <div className="flex gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); onMove(outlet.id, 'backward'); }}
+            disabled={!canMoveBackward}
+            className={`w-7 h-7 flex items-center justify-center rounded-md border ${canMoveBackward ? 'border-slate-200 text-slate-600 hover:bg-slate-50' : 'border-slate-100 text-slate-200 cursor-not-allowed'}`}
+          >
+            <i className="fa-solid fa-chevron-left text-[10px]"></i>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onMove(outlet.id, 'forward'); }}
+            disabled={!canMoveForward}
+            className={`w-7 h-7 flex items-center justify-center rounded-md border ${canMoveForward ? 'border-slate-200 text-slate-600 hover:bg-slate-50' : 'border-slate-100 text-slate-200 cursor-not-allowed'}`}
+          >
+            <i className="fa-solid fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+        
+        <button
+          onClick={(e) => { e.stopPropagation(); onAnalyze(outlet); }}
+          className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors flex items-center"
+        >
+          <i className="fa-solid fa-wand-sparkles mr-1.5"></i>
+          AI Insights
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default OutletCard;
